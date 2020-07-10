@@ -50,21 +50,24 @@ def postorder_rec(root):
 ```Python
 class Solution:
     def preorderTraversal(self, root: TreeNode) -> List[int]:
-        
-        preorder = []
-        if root is None:
-            return preorder
-        
-        s = [root]
-        while len(s) > 0:
-            node = s.pop()
-            preorder.append(node.val)
-            if node.right is not None:
-                s.append(node.right)
-            if node.left is not None:
-                s.append(node.left)
-        
-        return preorder
+        # 当为空节点时
+        if not root:
+            return []
+        # 对栈初始化，定义结果res
+        stack, res = [root], []
+        while stack:
+            node = stack.pop()
+            # 因为栈是后近先出的，先序遍历是：根节点，左，右
+            # 所以需要遍历完根节点后，需要先遍历右节点，在遍历左节点
+            # 这样出栈的时候，利用栈的后进先出，每次左节点先出，右节点后出
+            # 既实现了根， 左， 右
+            if node:
+                res.append(node.val)
+                if node.right:
+                    stack.append(node.right)
+                if node.left:
+                    stack.append(node.left)
+        return res
 ```
 
 #### [中序非递归](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)
@@ -72,42 +75,61 @@ class Solution:
 ```Python
 class Solution:
     def inorderTraversal(self, root: TreeNode) -> List[int]:
-        s, inorder = [], []
+        # 使用迭代的方法
+        stack, res = [], []
         node = root
-        while len(s) > 0 or node is not None:
+        # 思想，每次将左边全走完，然后换到右边一个后，
+        # 继续把当前右边的左边都走完，不断迭代
+        while stack or node is not None:
+            # 不断向左子树走，每走一次就将当前节点保存到栈中
+            # 模拟栈递归的调用
             if node is not None:
-                s.append(node)
-                node = node.left
+                stack.append(node) # 当前节点入栈
+                node = node.left # 遍历下一个左节点            
+            # 当前节点为空时，说明左子树走完了，则从栈中弹出节点，
+            # 并保存到结果res中
+            # 然后转向右边节点，然后继续城府上面的过程
+            # 中序遍历时，判断当前节点为空之后，就可以转去从栈中pop一个节点，
+            # 因为这时候，pop的是中间节点不影响。因为是按照 左中右的顺序
             else:
-                node = s.pop()
-                inorder.append(node.val)
+                node = stack.pop() # 当节点为空之后，则从栈中出栈一个节点作为当前节点
+                res.append(node.val) # 当前节点值入res
                 node = node.right
-        return inorder
+        return res  
 ```
 
 #### [后序非递归](https://leetcode-cn.com/problems/binary-tree-postorder-traversal/)
 
 ```Python
+# 核心就是：根节点必须在右节点弹出之后，再弹出
 class Solution:
     def postorderTraversal(self, root: TreeNode) -> List[int]:
-
-        s, postorder = [], []
-        node, last_visit = root, None
-        
-        while len(s) > 0 or node is not None:
-            if node is not None:
-                s.append(node)
-                node = node.left
-            else:
-                peek = s[-1]
-                if peek.right is not None and last_visit != peek.right:
-                    node = peek.right
+        res = [] # 存储后续遍历结果
+        stack = [] # 借用栈存储节点遍历
+        node = root # 初始为根节点
+        while stack or node:
+            # 当前节点不为空时，沿着当前节点往下不断遍历至叶子节点
+            while node:
+                stack.append(node) # 第一次是根节点入栈
+                # 判断当前节点的左子树是否存在，若存在，继续向左
+                # 若不存在转向右子树
+                if node.left is not None:
+                    node = node.left
                 else:
-                    last_visit = s.pop()
-                    postorder.append(last_visit.val)
-        
-        
-        return postorder
+                    node = node.right
+            # 循环结束说明走到了叶子节点，没有左右子树了，
+            # 该叶子节点即为当前栈顶元素，应该访问了
+            node = stack.pop() # 取出栈顶元素进行访问
+            res.append(node.val) # 将栈顶元素值，既当前节点的值添加进res
+            # stack[-1]是执行完上面那句取出栈顶元素后的栈顶元素
+            # 若栈不为空，且当前节点是栈顶元素的左节点，则直接转去遍历右节点
+            # 核心就是：根节点必须在右节点弹出之后，再弹出
+            if stack and stack[-1].left == node:
+                node = stack[-1].right
+            # 若左右子树都没有，则强迫退栈
+            else:
+                node = None
+        return res
 ```
 
 注意点
@@ -136,29 +158,38 @@ class Solution:
 #### [BFS 层次遍历](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
 
 ```Python
+from collections import deque
 class Solution:
     def levelOrder(self, root: TreeNode) -> List[List[int]]:
+        # 若root节点为空，则直接返回
+        if not root:
+            return []
+        # 下面使用队列实现BFS
         
-        levels = []
-        if root is None:
-            return levels
-        
-        bfs = collections.deque([root])
-        
-        while len(bfs) > 0:
-            levels.append([])
-            
-            level_size = len(bfs)
-            for _ in range(level_size):
-                node = bfs.popleft()
-                levels[-1].append(node.val)
-                
-                if node.left is not None:
-                    bfs.append(node.left)
-                if node.right is not None:
-                    bfs.append(node.right)
-        
-        return levels
+        # 结果集合res
+        res = []
+        layer = deque()
+        # 压入初始节点root
+        layer.append(root)
+        while layer:
+            # 设置临时变量，记录当前层的节点
+            cur_layer = []
+            # 遍历某一层的节点
+            for _ in range(len(layer)):
+                # 弹出待处理节点
+                node = layer.popleft()
+                # 当前节点值如临时cur_layer
+                cur_layer.append(node.val)
+                # 判断当前node是否有左右节点，
+                # 如果有的话，按照先左节点，后右节点的顺序入队列
+                if node.left:
+                    layer.append(node.left)
+                if node.right:
+                    layer.append(node.right)
+            # 遍历完某层之后，将此层的结果，加入到res中
+            res.append(cur_layer)
+        # 返回res
+        return res
 ```
 
 ### 分治法应用
@@ -186,6 +217,7 @@ class Solution:
 思路 1：分治法
 
 ```Python
+# 关键点：此树的深度和其左（右）子树的深度之间的关系。显然，此树的深度等于左子树的深度与右子树的深度中的最大值 +1 。
 class Solution:
     def maxDepth(self, root: TreeNode) -> int:
         
@@ -198,25 +230,24 @@ class Solution:
 思路 2：层序遍历
 
 ```Python
+from collections import deque
 class Solution:
-    def maxDepth(self, root: TreeNode) -> List[List[int]]:
-        
+    def maxDepth(self, root: TreeNode) -> int:
+        # 采用层序遍历方法，既BFS
+        if not root:
+            return 0
+        # 定义deque存出每层
+        layer = deque()
+        layer.append(root)
         depth = 0
-        if root is None:
-            return depth
-        
-        bfs = collections.deque([root])
-        
-        while len(bfs) > 0:
+        while layer:
+            for _ in range(len(layer)):
+                node = layer.popleft()
+                if node.left:
+                    layer.append(node.left)
+                if node.right:
+                    layer.append(node.right)
             depth += 1
-            level_size = len(bfs)
-            for _ in range(level_size):
-                node = bfs.popleft()
-                if node.left is not None:
-                    bfs.append(node.left)
-                if node.right is not None:
-                    bfs.append(node.right)
-        
         return depth
 ```
 
@@ -229,19 +260,20 @@ class Solution:
 ```Python
 class Solution:
     def isBalanced(self, root: TreeNode) -> bool:
- 
+        # 利用分治法，判断每次节点的递归是否满足
+        # 左边平衡&&右边平衡&&左右两边的高度差<=1
         def depth(root):
-            
+            # 每当遍历当叶子节点时，返回当前深度为0，且当前为平衡的
             if root is None:
                 return 0, True
-            
-            dl, bl = depth(root.left)
-            dr, br = depth(root.right)
-            
-            return max(dl, dr) + 1, bl and br and abs(dl - dr) < 2
-        
+            # 然后不断遍历左子树和右子树
+            depth_l, bool_l = depth(root.left)
+            depth_r, bool_r = depth(root.right)
+
+            # 返回左右子树的深度+1（可选），同时判断是否满足
+            # 左边平衡&&右边平衡&&左右两边的高度差<=1
+            return max(depth_l, depth_r) + 1, bool_l and bool_r and abs(depth_r - depth_l) <= 1
         _, out = depth(root)
-        
         return out
 ```
 
