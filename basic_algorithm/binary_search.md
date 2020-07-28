@@ -106,37 +106,61 @@ class Solution:
 
 ```Python
 class Solution:
-    def searchRange(self, nums, target):
+    def searchRange(self, nums: List[int], target: int) -> List[int]:
+        # 使用两次二分查找进行计算
+        # 采用模板三的边界计算：
+
+        # 默认Range范围
         Range = [-1, -1]
+
+        # 先进行容错处理
         if len(nums) == 0:
             return Range
-
-        l, r = 0, len(nums) - 1
-        while l + 1 < r:
-            mid = (l + r) // 2
-            if nums[mid] < target:
-                l = mid
-            else:
-                r = mid
+        '''
+        0 1 2 3 4 5
+        5 7 7 8 8 10
+        l   m m'     r
+            l'r'
         
+        '''
+        # 先使用二分查找，找到最左边的范围
+        l, r = 0, len(nums)-1
+        while(l + 1 < r):
+            mid = (l + r) // 2
+            # 当中值大于等于target时，不断将右边边界向左移动
+            # 因为右边的相等的，此时都不算，不断向左移动右边边界r
+            # 此时找到的是target左边的边界
+            if nums[mid] >= target:
+                r = mid
+            else:
+                l = mid
+        # 尾处理判断最后l和r谁满足结果
+        # 一般情况下，当前l刚好满足条件
         if nums[l] == target:
             Range[0] = l
         elif nums[r] == target:
             Range[0] = r
+        else:
+            # 若都不满足，说明没有找到目标值，直接范围[-1,-1]
+            return Range
         
+        # 再次使用二分查找，寻找另外一部分
         l, r = 0, len(nums) - 1
-        while l + 1 < r:
+        while (l+1 < r):
             mid = (l + r) // 2
+            # 当中值小于等于target时，都将左边边界向右移动
+            # 因为左边的相等的，此时都不算，不断向右移动左边边界l
             if nums[mid] <= target:
                 l = mid
             else:
                 r = mid
-        
+        # 这个时候，左右应该都相等，但是此时应该以右为先
+        # 判断右边边界l应该正好满足
         if nums[r] == target:
             Range[1] = r
         elif nums[l] == target:
             Range[1] = l
-        
+
         return Range
 ```
 
@@ -149,19 +173,60 @@ class Solution:
 ```Python
 class Solution:
     def searchInsert(self, nums: List[int], target: int) -> int:
+        # 看到排序数组，一般想到二分查找
+        # 二分查找先找一下是否存在，若存在返回索引
+        # 若不存在，找到合适的插入位置
+        # 使用模板1也可以，需要画图自己理解
+        if len(nums) == 0:
+            return0
         
-        l, r = 0, len(nums) - 1
-        
+        l, r = 0, len(nums)-1
         while l <= r:
             mid = (l + r) // 2
             if nums[mid] == target:
                 return mid
-            elif nums[mid] > target:
-                r = mid - 1
-            else:
+            elif nums[mid] < target:
                 l = mid + 1
-        
+            else:
+                r = mid - 1
         return l
+
+
+class Solution:
+    def searchInsert(self, nums: List[int], target: int) -> int:
+        # 看到排序数组，一般想到二分查找
+        # 二分查找先找一下是否存在，若存在返回索引
+        # 若不存在，找到合适的插入位置
+        # 使用模板3好些
+        # 处理数组为空的情况
+        if len(nums) == 0:
+            return 0
+        
+        # 需要先判断这个数和当前nums[-1]的大小关系
+        # 若其比最后一个还大，说明应该扩容数组
+        if target > nums[-1]:
+            return len(nums)
+        
+        # 若目标值比首元素小，则直接插入0位置
+        if target < nums[0]:
+            return 0
+        
+        # 若目标值位置在0-(len(nums)-1)之间，则进行二分查找
+        l, r = 0, len(nums)-1
+        while l + 1 < r:
+            mid = (l + r) // 2
+            if nums[mid] < target:
+                l = mid
+            else:
+                r = mid
+        # 判断和左右哪一个相等
+        if nums[l] == target:
+            return l
+        elif nums[r] == target:
+            return r
+        # 若和左右两个都不相等，直接插入到r
+        else:
+            return r
 ```
 
 ### [search-a-2d-matrix](https://leetcode-cn.com/problems/search-a-2d-matrix/)
@@ -171,17 +236,60 @@ class Solution:
 > - 每行中的整数从左到右按升序排列。
 > - 每行的第一个整数大于前一行的最后一个整数。
 
-思路：两次二分，首先定位行数，接着定位列数
+
 
 ```Python
 class Solution:
     def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
-        
-        if len(matrix) == 0 or len(matrix[0]) == 0:
+        # 先以右上角为起始判断点，初步判断target在哪一行
+        # 定位到行之后，对进行二分查找
+        # 异常筛选,若二维数组为空
+        if len(matrix) ==0 or len(matrix[0]) ==0:
             return False
-        
+
+        h, w = len(matrix), len(matrix[0])
+
+        # 使用循环遍历行，对最后一列进行判断
+        for i in range(h):
+            # 若target大于当前行的最大值（既最后一列的值）
+            # 则到下一行去
+            if matrix[i][w-1] < target:
+                continue
+            
+            # 若target在此行，则进行二分查找
+            l , r= 0, w-1
+            while l + 1 < r:
+                mid = (l + r) // 2
+                if matrix[i][mid] < target:
+                    l = mid
+                else:
+                    r = mid
+                
+            # 尾处理
+            if matrix[i][l] == target or matrix[i][r] == target:
+                return True
+            else:
+                return False
+        # 若都遍历完了，没有zhdao
+        return False
+
+思路：两次二分，首先定位行数，接着定位列数       
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        # 使用两次二分查找，
+        # 第一次在每行第一列进行查找，确定target所在行
+        # 第二次在定位行中进行查找
+        if len(matrix) ==0 or len(matrix[0]) ==0:
+            return False
+        '''
+        使用模板1的几点总结说明：
+        1.若寻找到最后，没有找到目标值：
+        1）若目标值小于最后的mid值，最终位置关系为：R < target < L(Mid)
+        2）若目标值大于最后的mid值，最终位置关系为：            R(Mid) < target < L
+        '''
+        # 当没有找到时，以最后的R为起始行，
         l, r = 0, len(matrix) - 1
-        
+
         while l <= r:
             mid = (l + r) // 2
             if matrix[mid][0] == target:
@@ -191,6 +299,7 @@ class Solution:
             else:
                 r = mid - 1
         
+        # 若没有找到进行二次行查找
         row = r
         l, r = 0, len(matrix[0]) - 1
         while l <= r:
@@ -202,7 +311,47 @@ class Solution:
             else:
                 r = mid - 1
         
+        # 若循环执行完了，说明没有
         return False
+        
+
+
+class Solution:
+    def searchMatrix(self, matrix: List[List[int]], target: int) -> bool:
+        # 利用此二维数组的特点，其可以视为是一个一维有序数组
+        # 直接利用二分查找进行
+        # 使用坐标时，需要进行转换，一维位置转换成二维
+
+        # 异常筛选,若二维数组为空
+        if len(matrix) ==0 or len(matrix[0]) ==0:
+            return False
+
+        h, w = len(matrix), len(matrix[0])
+
+        l , r= 0, w * h -1
+
+        while l + 1 < r:
+            mid = (l + r) // 2
+            # 一维变二维位置坐标：
+            cur_h = mid // w
+            cur_w = mid % w
+
+            if matrix[cur_h][cur_w] < target:
+                l = mid
+            else:
+                r = mid
+        # 现将当前l r转换为 二维坐标
+        l_h =  l // w
+        l_w = l % w
+
+        r_h =  r // w
+        r_w = r % w
+
+        # 尾处理
+        if matrix[l_h][l_w] == target or matrix[r_h][r_w] == target:
+            return True
+        else:
+            return False     
 ```
 
 ### [first-bad-version](https://leetcode-cn.com/problems/first-bad-version/)
@@ -228,11 +377,48 @@ class Solution:
         else:
             return r
 ```
+```python
+class Solution:
+    def firstBadVersion(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        # 使用二分法进行查找
+        # 使用模板3最后都会留下两个值
+        # 最两边的边界值，最后也可以的遍历到
+        # 不用纠结
+        # 最特殊情况全F，最终LR在倒数第一，第二位置
+        # 分别判断，先判断左边是否为T，剩下的最边界的出错地方
+        # 还有全T情况，最终LR在第一，第二位置
+        # 若第一开始错，则就是1，反之就是第二开始错
+
+        # 题目默认了，出错的位置，至少出现了在1 和 n上
+        l, r = 1, n
+
+        while l + 1 < r:
+            mid = (l + r) // 2
+            if isBadVersion(mid) == False:
+                l = mid
+            else:
+                r = mid
+        if isBadVersion(l):
+            return l
+        else:
+            return r
+```           
 
 ### [find-minimum-in-rotated-sorted-array](https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/)
 
 > 假设按照升序排序的数组在预先未知的某个点上进行了旋转( 例如，数组  [0,1,2,4,5,6,7] 可能变为  [4,5,6,7,0,1,2] )。
 > 请找出其中最小的元素。假设数组中无重复元素。
+
+这个和上个题目看这个大神的题解：
+https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/solution/tong-guo-hua-tu-geng-neng-shen-ke-li-jie-er-fen-fa/
+
+https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array-ii/solution/154-find-minimum-in-rotated-sorted-array-ii-by-jyd/
+
+https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array-ii/solution/tong-guo-hua-tu-lai-shen-ke-li-jie-er-fen-fa-by-ch/
 
 思路：使用二分搜索，当中间元素大于右侧元素时意味着拐点即最小元素在右侧，否则在左侧
 
@@ -250,6 +436,32 @@ class Solution:
                 r = mid
         
         return nums[l]
+```
+https://github.com/BonesCat/algorithm-pattern-python/tree/master/images/binarySearch-findMin.jpg
+
+```Python
+class Solution:
+    def findMin(self, nums: List[int]) -> int:
+        l, r = 0, len(nums) - 1
+        # 本题目的数组中不存在相等的数
+        # 所提l, mid, r之间只存在大小不等关系
+        while l + 1 < r:
+            mid = (l + r) // 2
+            # 如果中值 < 右值，则最小值在左半边，可以收缩右边界。
+            # 如果中值 > 右值，则最小值在右半边，可以收缩左边界。
+            # 中值 > 右值，最小值在右半边，收缩左边界
+            # 因为中值 > 右值，中值肯定不是最小值，左边界可以跨过mid
+
+            if nums[mid] > nums[r]:
+                l = mid
+            # 若mid小于right，说明右侧为递增
+            # 说明最小应该出现在左侧，所以
+            # 将mid设置为右边界
+            else:
+                r = mid
+        # 循环结束，剩下两个值，进行尾处理
+        # 判断哪个值更小，即为所需要的
+        return min(nums[l], nums[r])
 ```
 
 ### [find-minimum-in-rotated-sorted-array-ii](https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array-ii/)
@@ -275,6 +487,8 @@ class Solution:
         
         return nums[l]
 ```
+
+
 
 ### [search-in-rotated-sorted-array](https://leetcode-cn.com/problems/search-in-rotated-sorted-array/)
 
