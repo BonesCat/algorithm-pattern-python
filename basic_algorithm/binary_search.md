@@ -413,13 +413,6 @@ class Solution:
 > 假设按照升序排序的数组在预先未知的某个点上进行了旋转( 例如，数组  [0,1,2,4,5,6,7] 可能变为  [4,5,6,7,0,1,2] )。
 > 请找出其中最小的元素。假设数组中无重复元素。
 
-这个和上个题目看这个大神的题解：
-https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/solution/tong-guo-hua-tu-geng-neng-shen-ke-li-jie-er-fen-fa/
-
-https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array-ii/solution/154-find-minimum-in-rotated-sorted-array-ii-by-jyd/
-
-https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array-ii/solution/tong-guo-hua-tu-lai-shen-ke-li-jie-er-fen-fa-by-ch/
-
 思路：使用二分搜索，当中间元素大于右侧元素时意味着拐点即最小元素在右侧，否则在左侧
 
 ```Python
@@ -437,7 +430,7 @@ class Solution:
         
         return nums[l]
 ```
-https://github.com/BonesCat/algorithm-pattern-python/tree/master/images/binarySearch-findMin.jpg
+![binarySearch-findMin](https://github.com/BonesCat/algorithm-pattern-python/tree/master/images/binarySearch-findMin.jpg)
 
 ```Python
 class Solution:
@@ -469,23 +462,37 @@ class Solution:
 > 假设按照升序排序的数组在预先未知的某个点上进行了旋转
 > ( 例如，数组  [0,1,2,4,5,6,7] 可能变为  [4,5,6,7,0,1,2] )。
 > 请找出其中最小的元素。(包含重复元素)
+这个和上个题目看这个大神的题解：
+
+https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array/solution/tong-guo-hua-tu-geng-neng-shen-ke-li-jie-er-fen-fa/
+
+https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array-ii/solution/154-find-minimum-in-rotated-sorted-array-ii-by-jyd/
+
+https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array-ii/solution/tong-guo-hua-tu-lai-shen-ke-li-jie-er-fen-fa-by-ch/
 
 ```Python
 class Solution:
     def findMin(self, nums: List[int]) -> int:
-        
-        l , r = 0, len(nums) - 1
-        
-        while l < r:
+        l, r = 0, len(nums) - 1
+        # 本题目的数组中不存在相等的数
+        # 所提l, mid, r之间只存在大小不等关系
+        while l + 1 < r:
             mid = (l + r) // 2
+            # 如果中值 < 右值，则最小值在左半边，可以收缩右边界。
+            # 如果中值 > 右值，则最小值在右半边，可以收缩左边界。
+            # 中值 > 右值，最小值在右半边，收缩左边界
+            # 因为中值 > 右值，中值肯定不是最小值，左边界可以跨过mid
+
             if nums[mid] > nums[r]:
-                l = mid + 1
-            elif nums[mid] < nums[r] or nums[mid] != nums[l]:
+                l = mid
+            # 若mid小于right，说明右侧为递增
+            # 说明最小应该出现在左侧，所以
+            # 将mid设置为右边界
+            else:
                 r = mid
-            else: # nums[l] == nums[mid] == nums[r]
-                l += 1
-        
-        return nums[l]
+        # 循环结束，剩下两个值，进行尾处理
+        # 判断哪个值更小，即为所需要的
+        return min(nums[l], nums[r])      
 ```
 
 
@@ -497,27 +504,95 @@ class Solution:
 > 搜索一个给定的目标值，如果数组中存在这个目标值，则返回它的索引，否则返回  -1 。
 > 你可以假设数组中不存在重复的元素。
 
+![binarySearch-searchTargetInRotateArray](https://github.com/BonesCat/algorithm-pattern-python/tree/master/images/binarySearch-searchTargetInRotateArray.jpg)
 ```Python
 class Solution:
-    def search(self, nums: List[int], target: int) -> int:
-        
-        l , r = 0, len(nums) - 1
-        
-        while l <= r:
+    def search(self, nums, target):
+        # 方法，先使用二分法确定分界点
+        # 此数组中不包含重复元素
+        # 在根据target和分界点值的关系确定target所述区域
+        # 再次使用一次二分法
+
+        # 先进行特殊判断
+        if len(nums) == 0:
+            return -1
+        # 模板3：
+        l, r = 0, len(nums) - 1
+
+        while l + 1 < r:
             mid = (l + r) // 2
-            if nums[mid] == target:
-                return mid
-            elif nums[mid] > target:
-                if nums[l] > target and nums[mid] > nums[r]:
-                    l = mid + 1
-                else:
-                    r = mid - 1
+            if nums[mid] > nums[r]:
+                l = mid
             else:
-                if nums[r] < target and nums[mid] < nums[l]:
-                    r = mid - 1
+                r = mid
+        # 尾处理，确定分界位置
+        # 找最小的那个的位置
+        if nums[l] < nums[r]:
+            depart = l
+        else:
+            depart = r
+        
+        # 通过target与depart关系确定二次搜索区域
+        if target == nums[depart]:
+            return depart
+        elif depart == 0:
+            # 此时是升序，则直接进行搜索
+            l, r = 0, len(nums)-1
+        elif nums[0] <= target <= nums[depart-1]:
+            l, r = 0, depart-1
+        else:
+            l, r = depart, len(nums)-1
+        
+        while l + 1 < r:
+            mid = (l + r) // 2
+            if nums[mid] > target:
+                r = mid
+            else:
+                l = mid
+        # 尾处理，确定最后是否存在
+        if nums[l] == target:
+            return l
+        elif nums[r] == target:
+            return r
+        else:
+            return -1
+            
+class Solution2:
+    def search(self, nums, target):
+        # 方法，使用二分法一次性进行判断
+        # 此数组中不包含重复元素
+
+
+        # 先进行特殊判断
+        if len(nums) == 0:
+            return -1
+        # 模板3：
+        l, r = 0, len(nums) - 1
+        while l + 1 < r:
+            mid = (l + r) // 2
+            # 先判断target和end的关系，确定其大致在什么部分
+            # 在较大的升序部分（既折断，翻转的部分）
+            if target > nums[r]:
+                # 若mid在target左边，则缩小左边界到mid
+                if nums[mid] > target or nums[mid] < nums[r]:
+                    r = mid
+                # 否则缩小右边界
                 else:
-                    l = mid + 1
-        return -1
+                    r = mid
+            else:
+                if nums[mid] < target or nums[mid] > nums[r]:
+                    l = mid
+                else:
+                    r = mid
+        print(l, r)
+
+        # 尾处理，确定最后是否存在
+        if nums[l] == target:
+            return l
+        elif nums[r] == target:
+            return r
+        else:
+            return -1
 ```
 
 注意点
@@ -532,29 +607,53 @@ class Solution:
 
 ```Python
 class Solution:
-    def search(self, nums: List[int], target: int) -> int:
-        
-        l , r = 0, len(nums) - 1
-        
-        while l <= r:
-            if nums[l] == nums[r] and nums[l] != target:
-                l += 1
-                r -= 1
-                continue
+    def search(self, nums: List[int], target: int) -> bool:
+        # 方法，使用二分法一次性进行判断
+        # 此数组中不包含重复元素
+        # 先进行特殊判断
+        if len(nums) == 0:
+            return False
+        # 模板3：
+        l, r = 0, len(nums) - 1
+        while l + 1 < r:
             mid = (l + r) // 2
+            # 判断中值是否等于target
             if nums[mid] == target:
                 return True
-            elif nums[mid] > target:
-                if nums[l] > target and nums[mid] > nums[r]:
-                    l = mid + 1
+            # 先判断中值和end的关系，确定其mid在左还是右部分           
+            # 如果nums[mid]>nums[right],说明mid在左边部分（既折断，翻转的部分）
+            if nums[mid] > nums[r]:
+                # 此时左半段是有序的
+                # 在此左半端判断target是否在其中
+                # 若在，则缩小右边界至mid
+                if nums[l] <= target < nums[mid]:
+                    r = mid
+                # 否则缩小左边界至mid
                 else:
-                    r = mid - 1
+                    l = mid
+            # 否则的话，说明mid在右边部分
+            elif nums[mid] < nums[r]:
+                # 此时，右边这部分有序，可以判断target和mid和right的大小关小
+                # 若nums[mid] < target < nums[r]
+                # 说明target在此部分，缩小左边界
+                # 都直接将l移动至mid
+                if nums[mid] < target <= nums[r]:
+                    l = mid
+                # 反之，target在剩下的左边+一点mid的位置
+                # 缩小右边边界
+                else:
+                    r = mid
             else:
-                if nums[r] < target and nums[mid] < nums[l]:
-                    r = mid - 1
-                else:
-                    l = mid + 1
-        return False
+                # 若此时nums[mid]和nums[r]相等
+                # 相同元素时，将右边节向中间压缩
+                # 将r向左移动一个
+                r -= 1
+
+        # 尾处理，确定最后是否存在
+        if nums[l] == target or nums[r] == target:
+            return True
+        else:
+            return False
 ```
 
 ## 总结
