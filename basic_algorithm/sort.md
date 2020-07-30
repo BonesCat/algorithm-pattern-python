@@ -276,13 +276,13 @@ class Solution:
         quick_sort(nums,0, len(nums)-1 )
         return nums[-k]
 ```
-###[最小的k个数](https://leetcode-cn.com/problems/zui-xiao-de-kge-shu-lcof/)
-思路很多，可以帮助梳理基础的快排，还有堆排序，特别注意Python利用生成大顶堆的方法（加负号），注意负值大小关系的处理
-还有记住：
-MaxTopK:用小顶堆 MinTopK：用大顶堆
+### [最小的k个数](https://leetcode-cn.com/problems/zui-xiao-de-kge-shu-lcof/)
 
-```
-Python
+思路很多，可以帮助梳理基础的快排，还有堆排序，特别注意Python利用生成大顶堆的方法（加负号），注意负值大小关系的处理
+
+还有记住：MaxTopK:用小顶堆 MinTopK：用大顶堆
+
+```Python
 import heapq
 class Solution:
     def getLeastNumbers(self, arr: List[int], k: int) -> List[int]:
