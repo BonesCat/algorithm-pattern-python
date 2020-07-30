@@ -355,10 +355,11 @@ class Solution:
 ### [sortArray](https://leetcode-cn.com/problems/sort-an-array/)
 
 参考了大佬的讲解，还有代码，主要为了熟悉基础的排序，还有其他的一些排序没有写进去
+
 详情见:
-###[Python实现十大经典排序](https://leetcode-cn.com/problems/sort-an-array/solution/python-shi-xian-de-shi-da-jing-dian-pai-xu-suan-fa/)
-```
-Python
+
+### [Python实现十大经典排序](https://leetcode-cn.com/problems/sort-an-array/solution/python-shi-xian-de-shi-da-jing-dian-pai-xu-suan-fa/)
+```Python
 
 class Solution:
     def sortArray(self, nums: List[int]) -> List[int]:
