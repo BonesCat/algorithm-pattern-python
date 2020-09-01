@@ -473,26 +473,24 @@ https://leetcode-cn.com/problems/find-minimum-in-rotated-sorted-array-ii/solutio
 ```Python
 class Solution:
     def findMin(self, nums: List[int]) -> int:
+        # 使用模板3
+        if len(nums) == 0:
+            return null
+
         l, r = 0, len(nums) - 1
-        # 本题目的数组中不存在相等的数
-        # 所提l, mid, r之间只存在大小不等关系
+
         while l + 1 < r:
             mid = (l + r) // 2
-            # 如果中值 < 右值，则最小值在左半边，可以收缩右边界。
-            # 如果中值 > 右值，则最小值在右半边，可以收缩左边界。
-            # 中值 > 右值，最小值在右半边，收缩左边界
-            # 因为中值 > 右值，中值肯定不是最小值，左边界可以跨过mid
-
             if nums[mid] > nums[r]:
                 l = mid
-            # 若mid小于right，说明右侧为递增
-            # 说明最小应该出现在左侧，所以
-            # 将mid设置为右边界
-            else:
+            elif nums[mid] < nums[r]:
                 r = mid
-        # 循环结束，剩下两个值，进行尾处理
-        # 判断哪个值更小，即为所需要的
-        return min(nums[l], nums[r])      
+            else:
+                # 当mid的值和r值相等时
+                # 采取将r向左移动一位的方法
+                r = r - 1
+
+        return min(nums[l], nums[r]) 
 ```
 
 
